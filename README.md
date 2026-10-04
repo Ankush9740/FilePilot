@@ -64,13 +64,15 @@ py -3 -m venv .venv
 .\.venv\Scripts\python.exe main.py
 ```
 
-For v1.0.0, use this source setup. Packaged Windows releases and signing are planned separately. Downloading the source and installing dependencies requires internet access; the application itself runs locally.
+This source setup requires Python. Packaged Windows builds bundle Python and Qt, so users do not need to install Python. Downloading the source and installing dependencies requires internet access; the application itself runs locally.
 
 Optionally open with a read-only scan:
 
 ```powershell
 .\.venv\Scripts\python.exe main.py --folder "C:\YourFolder"
 ```
+
+Developers can follow the [Windows build instructions](packaging/README.md), then run `./packaging/build.ps1`. The application is produced at `dist/FilePilot/FilePilot.exe`; adding `-Installer` with Inno Setup installed produces `dist/installer/FilePilot-Setup-1.0.0.exe`. No published download is available yet.
 
 ## How it works
 
@@ -150,5 +152,5 @@ Detailed evidence: [final product review](docs/product-polish-report.md), [safe 
 - Organization is limited to the same volume and applies all conflict-free preview rows; selective rows are not yet supported.
 - Reported storage uses logical file sizes, which may differ from occupied disk space for hard links, sparse files or compression.
 
-Future work includes Windows packaging/signing, configurable exclusions, selective organization and larger-scale benchmarking while preserving local, private operation.
+Future work includes signed Windows releases, configurable exclusions, selective organization and larger-scale benchmarking while preserving local, private operation.
 
