@@ -2,179 +2,153 @@
 
 **Organize smarter. Find what matters.**
 
-FilePilot is a Windows desktop utility for understanding crowded folders, reviewing exact duplicates, and organizing files with an explicit preview and reversible move history. It runs entirely on your computer.
+FilePilot is a local-first Windows desktop application for understanding crowded folders, finding exact duplicates, and organizing files with a preview before changes. Review storage usage, search your files, and move them into category folders with a verified way back through operation history.
 
-The interface uses warm paper surfaces, charcoal typography, a forest-green identity, and native Qt-painted icons, storage visualization, and page-specific empty illustrations. Dark mode uses graphite surfaces and a softer sage accent. First launch shows an honest empty state, with no sample files loaded.
+Everything runs on your computer, with no account, cloud processing or telemetry. FilePilot combines a warm-paper light theme and graphite dark theme with forest-green and sage accents, keeping the focus on your files and the decisions you make about them.
 
-## Features
+## Preview
 
-- Recursive, read-only folder scans with native folder selection, cancellation, progress, and per-path error reporting.
-- Dashboard with a persistent summary strip, proportional category storage, counts and percentages, largest files, and actionable large/older/duplicate insights.
-- Model-backed file table with filename search, active filter indicators, reset, numeric/date sorting, copyable full-value inspection, and **Show in Explorer**.
-- Exact duplicate groups found through identical-size candidates and chunked SHA-256 hashing. Extra-copy bytes use `(copies - 1) × size`. No duplicate deletion.
-- Category-based organization previews showing source → destination, conflicts, already-organized files, and an explanation of nested-file restructuring before applying.
-- Explicit confirmation before moves; existing filenames are always skipped, including collisions between proposed moves.
-- Persistent operation timeline with explicit undo selection, individual file outcomes, verified undo, partial undo, and retries for failed restores.
-- Confirmed **Clear history** removes only terminal records with nothing left to restore; actionable and retryable operations remain. Clearing changes the local journal, never your files or folders.
-- Durable move/restore intent and read-only recovery of interrupted operations on startup.
-- Real preferences: selectable Light/Dark/System themes, unit-labelled review thresholds, editable category destinations, and inline save feedback.
-- Browsing, filtering, and inspection remain available during background work; conflicting actions are disabled until completion.
-- Keyboard shortcuts: **Ctrl+O** choose folder, **Ctrl+R** rescan, **Ctrl+F** filename search.
+![FilePilot Dashboard in light mode](assets/screenshots/dashboard-light.png)
 
-## Screenshots
-
-These captures use the real Qt interface. The populated dashboard was scanned from an isolated, generated test fixture. Production launches empty.
+Native Qt interface, shown with disposable test files. FilePilot opens with an empty workspace. [View the dark Dashboard](assets/screenshots/dashboard-dark.png).
 
 | Light | Dark |
 | --- | --- |
-| ![Welcome in light mode](assets/screenshots/welcome-light.png) | ![Welcome in dark mode](assets/screenshots/welcome-dark.png) |
-| ![Dashboard in light mode](assets/screenshots/dashboard-light.png) | ![Dashboard in dark mode](assets/screenshots/dashboard-dark.png) |
 | ![Files in light mode](assets/screenshots/files-light.png) | ![Files in dark mode](assets/screenshots/files-dark.png) |
-| ![Duplicates in light mode](assets/screenshots/duplicates-light.png) | ![Duplicates in dark mode](assets/screenshots/duplicates-dark.png) |
-| ![Organization in light mode](assets/screenshots/organize-light.png) | ![Organization in dark mode](assets/screenshots/organize-dark.png) |
+| ![Exact duplicates in light mode](assets/screenshots/duplicates-light.png) | ![Exact duplicates in dark mode](assets/screenshots/duplicates-dark.png) |
+
+<details>
+<summary>See organization, History and Settings</summary>
+
+| Light | Dark |
+| --- | --- |
+| ![Organization preview in light mode](assets/screenshots/organize-light.png) | ![Organization preview in dark mode](assets/screenshots/organize-dark.png) |
 | ![History in light mode](assets/screenshots/history-light.png) | ![History in dark mode](assets/screenshots/history-dark.png) |
 | ![Settings in light mode](assets/screenshots/settings-light.png) | ![Settings in dark mode](assets/screenshots/settings-dark.png) |
 
-Portfolio captures come from the native Windows Qt platform and disposable fixtures. `python verification/refinement_ui.py` exercises all six pages in Light, Dark, and System at 1440×900, 1280×800, and 1000×680, with scroll regression checks, long-value inspection, empty/single/zero-byte cases, confirmation, background browsing, and a real partial-undo retry. Add `--native` for the Windows platform. Use `--native --current-scale` for the two smaller sizes on a 1080p display at 125% scaling; the complete native matrix was also verified at 100% scale. The original `verification/render_ui.py` remains available for the smaller baseline fixture.
+</details>
 
-## Technology
+## Highlights
 
-- Python 3.12+
-- PySide6 / Qt 6
-- SQLite, `pathlib`, `os`, `hashlib`, and other Python standard-library modules
-- pytest; Qt's built-in QtTest module for UI verification
+- **Read-only folder analysis:** recursive scans, category storage breakdowns, largest files and large/older-file insights.
+- **File browsing:** filename search, category and extension filters, size/date sorting, copyable full paths and Show in Explorer.
+- **Exact duplicates:** identical-size candidates are verified with chunked SHA-256 hashing. Extra-copy space is reported for review; files are never automatically deleted.
+- **Preview before moving:** inspect each source and proposed destination, nested-file restructuring, conflicts and already-organized files.
+- **Conflict-safe moves:** explicit confirmation, no overwrites, and skipped existing or proposed filename collisions.
+- **Verified Undo:** persistent move history, individual file outcomes, conservative restoration and retries for partial restores.
+- **Safe Clear History:** remove only terminal records with nothing left to restore, keeping actionable and retryable operations.
+- **Local preferences:** Light/Dark/System themes, review thresholds and editable category destination names.
+- **Background work:** scanning, hashing and file operations run off the UI thread; browsing stays available while conflicting actions are disabled.
 
-No web server, charting package, AI SDK, account, or cloud dependency is involved. Internet access is needed only to install the Python packages.
+## Safety by design
 
-## Setup and launch
+- **Scans and previews are read-only.** Duplicate analysis reads file contents and never deletes duplicates.
+- **Moves require confirmation.** Existing destinations are never overwritten. Missing, changed, locked or inaccessible files are skipped individually.
+- **Operations stay within the selected root.** Category destinations are validated; symbolic links, junctions and other reparse points are skipped, and existing ancestors are checked. Application and data directories are protected.
+- **Undo verifies before restoring.** File identity and SHA-256 fingerprints must match. Replaced or modified files and occupied original locations are refused; partial restores stay recorded for retry.
+- **Folder cleanup is conservative.** After complete restoration, only verified, empty category directories created by that operation may be removed. Preexisting, nonempty, changed, protected or still-referenced folders remain. Removal is never recursive, and cleanup failures do not change restored-file counts.
+- **Interrupted operations remain traceable.** SQLite records intent before each move or restore. Startup recovery checks the journal without moving files; ambiguous items remain available for manual review. Filesystem changes and database commits are not one atomic transaction.
+- **Clear History changes only the journal.** It requires confirmation, preserves future Undo and never moves, restores or deletes files or directories.
 
-In PowerShell, from `C:\FilePilot`:
+History is a move journal, not a backup. FilePilot is intended for normal local Windows filesystems; it does not lock every external process against concurrent changes. Rescan when another application is modifying the folder.
+
+## Getting started
+
+Install **Python 3.12 or newer** with the Windows Python launcher, then run these commands in PowerShell:
 
 ```powershell
+git clone https://github.com/Ankush9740/FilePilot.git
+cd FilePilot
 py -3 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe main.py
 ```
 
-The existing development environment in this workspace is already installed. Launch it directly:
+For v1.0.0, use this source setup. Packaged Windows releases and signing are planned separately. Downloading the source and installing dependencies requires internet access; the application itself runs locally.
 
-```powershell
-Set-Location C:\FilePilot
-.\.venv\Scripts\python.exe main.py
-```
-
-You can optionally start with a read-only folder scan:
+Optionally open with a read-only scan:
 
 ```powershell
 .\.venv\Scripts\python.exe main.py --folder "C:\YourFolder"
 ```
 
-For an installed CLI entry point, install the package with `python -m pip install -e .` and run `filepilot`.
+## How it works
 
-## Use
+1. **Choose Folder** to scan recursively.
+2. Review **Dashboard** and **Files** to understand storage and find what matters.
+3. Use **Duplicates > Find duplicates** if you want to compare exact file contents.
+4. Open **Organize > Create preview** and review destinations and skipped conflicts. Nested files may be moved into the root's category folders; the preview shows this explicitly.
+5. Select **Apply Organization > Move files** to confirm the move. The dialog defaults to Cancel.
+6. Select an operation in **History** and use **Undo** when needed. FilePilot verifies each file and refreshes the scan after apply or undo.
 
-1. **Choose Folder** to scan. This reads metadata and makes no changes.
-2. Browse **Dashboard** and **Files**. **Duplicates → Find duplicates** compares content in a separate background operation.
-3. **Organize → Create preview** proposes moves into direct category folders. Review the full paths and skipped conflicts.
-4. **Apply Organization → Move files** is the only organization flow that moves files. The confirmation defaults to Cancel.
-5. Select an operation in **History**. **Undo operation #… → Restore files** checks the recorded file before restoring it. Completed moves are selected explicitly; reopening History without a selection does not choose an undo target for you.
-6. **History → Clear history** optionally removes fully undone or skipped-only terminal records after confirmation. Completed operations with moved files, partial restores and unresolved operations are kept. Clearing cannot be undone; it never changes working-folder contents.
+**Clear history** optionally removes fully undone or skipped-only terminal records after confirmation. Completed operations with moved files, partial restores and unresolved operations are kept. Clearing records cannot be undone and never changes working-folder contents.
 
-After apply or undo, FilePilot refreshes the current scan. Page navigation reuses the existing scan. Cancelled scans are labelled partial, and must be rescanned to produce an organization preview. Cancelled duplicate analysis is also labelled partial.
+Shortcuts: **Ctrl+O** choose folder, **Ctrl+R** rescan, **Ctrl+F** search files. Cancelled scans must be rescanned before creating an organization preview.
 
-## Safety philosophy
+## Privacy
 
-Scanning and preview generation are read-only. There is no file-delete action or automatic duplicate cleanup. Paths, content, and metadata are checked again at execution time; a scan is never treated as permission to move files.
+Everything runs locally. There is no telemetry, analytics, upload, account requirement or external API. Filenames, paths, operation metadata and hashes stay on your computer. File contents are streamed only when hashing is needed and are not stored in SQLite. Scan results live in memory and are not persisted.
 
-- Symbolic links, Windows junctions, and other reparse points are skipped. Existing ancestors are checked before operations.
-- The source application directory and FilePilot's data directory are protected from analysis and organization. Selecting the application folder itself is refused.
-- Destinations must remain inside the selected root. Category names cannot include paths, Windows reserved names, or case-insensitive duplicates.
-- A file already below its matching root category folder stays where it is. Other nested files are proposed for the category folder; the preview explicitly shows this flattening.
-- Missing, changed, locked, and inaccessible files fail individually. A changed file needs a fresh scan.
-- Windows moves use same-volume `os.rename`, which refuses an occupied destination. The portable fallback uses a no-replace hard link followed by removal of the original entry. Cross-volume moves are refused.
-- Successful moves retain file identity and a SHA-256 content fingerprint. Undo refuses a replaced, modified, missing, or conflicting file. After complete file restoration, it removes only verified, empty category directories created by that operation. Preexisting, replaced, nonempty, protected, and still-referenced folders remain. Removal is never recursive; cleanup failures do not change successful restoration counts.
-- SQLite commits intent before a move or restore, and records completion afterward. These are not one atomic filesystem/database transaction: startup recovery verifies where an interrupted file arrived without moving it. Ambiguous items remain visible in History for manual review.
-- Cancellation stops at safe work boundaries. Successfully moved files remain journaled and can be undone.
-
-The app is intended for normal local Windows filesystems, not as protection against another process deliberately racing or manipulating every path check. There is no filesystem watcher or lock against all external changes; review and rescan when another application is modifying the folder. History is a move journal, not a backup.
-
-## Persistence and privacy
-
-On Windows, the database is created automatically at:
+History and preferences are stored at:
 
 ```text
 %LOCALAPPDATA%\FilePilot\filepilot.sqlite3
 ```
 
-Use `--data-dir "C:\YourDevelopmentData"` to isolate development storage. Tests always use temporary databases and test-created files.
+Use `--data-dir "C:\YourDevelopmentData"` to isolate development storage. Tests use temporary databases and test-created files.
 
-Schema version 2 contains:
+## Tech stack
 
-| Table | Purpose |
-| --- | --- |
-| `operations` | Timestamp, source root, proposed item count, and operation status |
-| `operation_items` | Original/destination paths, file identity, size, modification time, fingerprint, outcome, and error |
-| `operation_directories` | Per-operation category paths, creation provenance, directory identity, and cleanup outcome |
-| `settings` | Validated local preferences |
-
-`PRAGMA user_version` guards schema compatibility. The additive version-1-to-2 migration preserves existing history and settings in a transaction. Older operations have no recorded directory ownership, so their folders are retained. Connections use foreign keys, WAL journaling, full synchronization, and transactions. Each service call opens its own short-lived connections so the UI and worker do not share a thread-bound SQLite connection. A database created by a newer version is refused rather than modified.
-
-No telemetry, analytics SDK, uploads, accounts, or external APIs. Filenames, paths, operation metadata, and hashes stay local. File contents are streamed for hashing and are not stored in SQLite. Scan results live in memory and are not persisted.
+- Python 3.12+
+- PySide6 / Qt 6
+- SQLite and the Python standard library
+- pytest and QtTest
 
 ## Architecture
 
-The core does not import Qt. Typed dataclasses represent scans, file metadata, duplicate groups, plans, settings, and outcomes. Services perform scanning, analysis, hashing, preview, apply, undo, and recovery. The persistence layer stores the journal. The Qt shell owns the current scan state, native dialogs, confirmation, page navigation, and worker lifecycle. Shared UI components own the sidebar/header/status/feedback, icon and illustration family, summary and storage controls, elision/copy/details, and duplicate/preview presentation models. Themes centralize palette, typography, and native control states. The dashboard summary sits outside its scrolling viewport, preventing partially scrolled metric values.
+The core is independent of Qt. Typed dataclasses represent scans, files, duplicate groups, plans and outcomes. Services handle analysis, preview, apply, undo and recovery; SQLite persists the operation journal and preferences. The Qt shell coordinates native dialogs, shared state and cancellable QThread workers. Model-backed tables support browsing without creating a widget for every row.
 
 ```text
 FilePilot/
-├── main.py                         # Desktop entry point
-├── pyproject.toml                  # Package / CLI / pytest configuration
-├── requirements.txt
-├── filepilot/
-│   ├── main.py                     # Qt bootstrap and CLI options
-│   ├── core/                       # Categories, per-user paths, safety primitives
-│   ├── models/                     # Dataclasses
-│   ├── database/                   # Versioned SQLite store
-│   ├── services/                   # Scanner, duplicates, analysis, organizer/undo
-│   └── ui/
-│       ├── assets/                 # Application mark and theme-aware chevrons
-│       ├── components/             # Shell, controls, details, models, custom painting
-│       ├── pages/                  # Six product pages
-│       ├── theme.py                # Light and dark palettes
-│       ├── state.py                # Shared scan/analysis/preview state
-│       ├── workers.py              # Cancellable QThread jobs
-│       └── window.py               # Desktop shell and interaction coordination
-├── tests/                          # Isolated core and Qt integration tests
-├── assets/screenshots/             # Verified portfolio captures
-├── docs/refinement-report.md       # Engineering report and changed-file inventory
-└── verification/                   # Baseline/refinement captures and native startup checks
+|-- main.py                  # Desktop entry point
+|-- pyproject.toml           # Package and test configuration
+|-- requirements.txt
+|-- filepilot/
+|   |-- core/                # Categories, paths and safety primitives
+|   |-- models/              # Typed records
+|   |-- services/            # Scan, analysis, duplicates, organize and undo
+|   |-- database/            # Versioned SQLite journal
+|   +-- ui/                  # Pages, shared controls, themes and workers
+|-- tests/                   # Core and Qt integration tests
+|-- assets/screenshots/      # Native interface captures
+|-- docs/                    # Detailed engineering and verification reports
++-- verification/            # Native startup and workflow/UI audits
 ```
 
-Scanning, duplicate hashing, preview generation, threshold analysis, apply, undo, and interruption recovery execute off the main Qt thread. File and preview tables access records through models rather than creating a widget for every row. Hashing reads one-megabyte chunks and ignores singleton size groups.
+Hashing uses one-megabyte chunks and ignores singleton size groups during duplicate analysis. The journal records move/restore intent and directory provenance. Schema migrations preserve existing history and settings; databases from a newer version are refused rather than modified.
 
-## Tests
+## Testing
+
+Latest verified result: **149 passed, 1 skipped** on Windows with Python 3.14.6, PySide6 6.11.2 and pytest 9.1.1. The skipped case requires Windows Developer Mode or privileges to create symbolic links; separate junction tests pass.
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe -m compileall -q filepilot main.py
-.\.venv\Scripts\python.exe verification\render_ui.py
-.\.venv\Scripts\python.exe verification\refinement_ui.py
-.\.venv\Scripts\python.exe verification\refinement_ui.py --native --current-scale
+.\.venv\Scripts\python.exe -m compileall -q filepilot main.py tests verification
 .\.venv\Scripts\python.exe verification\startup_smoke.py
-.\.venv\Scripts\python.exe verification\production_audit.py --native
-.\.venv\Scripts\python.exe verification\product_polish_ui.py --native --current-scale
 ```
 
-Coverage includes category classification, file-size formatting, read-only recursive scanning, missing/denied paths, protected directories, cancellation, exact duplicates, redundant-space arithmetic, organization previews, existing and planned conflicts, transaction failures, interruption recovery, changed-content undo refusal, partial undo and retry, settings, schema versioning, sorting/filtering, confirmations, background workflows, empty states, and theme/window rendering.
+Coverage includes read-only scanning, exact duplicates, conflicts, no-overwrite moves, changed-file refusal, interruption recovery, partial Undo/retry, directory cleanup, transactional Clear History, migrations, settings and UI responsiveness.
 
-The Windows symlink-creation test skips when Developer Mode or symlink privileges are unavailable. A separate junction-loop test covers Windows reparse-point traversal without requiring those privileges.
+Native Windows UI verification covers all six pages in Light/Dark/System at 1440 x 900, 1280 x 800 and 1000 x 680, with the smaller sizes also checked at 125% scaling. The 40-file workflow moved and restored all files with 0 skipped, safely cleaned seven created categories, and cleared the eligible history record without changing files or folders. Compilation and native startup checks passed.
 
-Verified on Windows with Python 3.14.6, PySide6 6.11.2, and pytest 9.1.1: **149 passed, 1 skipped in 192.49s**. The skip remains the privilege-dependent symbolic-link creation test. All previous 124 passing cases are preserved, with 25 Clear History cases added. Compilation, migration tests and native startup passed. The final native review covers all six pages in all three themes and requested sizes, plus 125% scaling at the two smaller sizes, with no Qt warnings or painting/geometry failures. The native 40-file workflow restored the original file/folder snapshot, removed seven created categories, preserved the preexisting category, and cleared the completed record without changing files or folders. The 1,200-file event-loop test and focused History painting tests still pass. See [the final product-polish report](docs/product-polish-report.md) for eligibility rules, exact changes and verification evidence; [the production-readiness report](docs/production-readiness-report.md) documents the existing safe directory cleanup.
+Detailed evidence: [final product review](docs/product-polish-report.md), [safe Undo and directory cleanup](docs/production-readiness-report.md), and [History rendering regression](docs/history-rendering-fix.md).
 
-## Current limits and next steps
+## Limitations / Roadmap
 
-V1 is a source-distributed desktop application; an installer, signing, and automatic updates are future work. Organization applies all conflict-free rows in a preview; selective per-row choices and additional rule types can be added. Category mappings are centralized in code; destination folder names are editable in Settings. No duplicate deletion, filesystem monitoring, scan caching across launches, or cross-volume organization is implemented.
+- Duplicate detection is for review; duplicate deletion is not implemented.
+- No filesystem watcher or persistent scan cache. Rescan to pick up changes.
+- Organization is limited to the same volume and applies all conflict-free preview rows; selective rows are not yet supported.
+- Reported storage uses logical file sizes, which may differ from occupied disk space for hard links, sparse files or compression.
 
-Reported storage is the sum of logical file sizes. Hard links, sparse files, and compression can make actual occupied disk space different. Created time is collected in scan metadata only when the platform provides it reliably; the Files table displays and sorts modification time. Content hashes identify exact matches among successfully read files, not perceptual image or semantic document similarity.
+Future work includes Windows packaging/signing, configurable exclusions, selective organization and larger-scale benchmarking while preserving local, private operation.
 
-Future work can add signed Windows packaging, configurable exclusions, selective previews, disk-allocation-aware accounting, and larger-scale benchmarking without compromising the local-first design.
