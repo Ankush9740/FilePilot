@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "filepilot"
+version = "1.0.0"
+description = "Local-first Windows file analysis and safe organization"
+requires-python = ">=3.12"
+dependencies = ["PySide6>=6.8,<7"]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10"]
+
+[project.scripts]
+filepilot = "filepilot.main:main"
+
+[tool.setuptools.packages.find]
+include = ["filepilot*"]
+
+[tool.setuptools.package-data]
+filepilot = ["ui/assets/*.svg"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
